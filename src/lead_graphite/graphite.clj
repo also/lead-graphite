@@ -61,3 +61,6 @@ from graphite.render import functions
   (intern *ns* (with-meta (symbol function-name) {:args "???"}) (partial call function)))
 
 (def TimeSeries (.__getattr__ functions-module "TimeSeries"))
+
+(defn time-series [t]
+  (apply call TimeSeries ((juxt :name :start :end :step :values :consolidation-fn) t)))
