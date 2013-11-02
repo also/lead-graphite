@@ -9,6 +9,7 @@
 (def datetime-module (imp/importName "datetime" true))
 (def datetime-class (.__getattr__ datetime-module "datetime"))
 (defn datetime [timestamp] (-> datetime-class (.__getattr__ "fromtimestamp") (call timestamp)))
+(def getargspec (partial call (-> (imp/importName "inspect" true) (.__getattr__ "getargspec"))))
 
 (.exec interp
 "
