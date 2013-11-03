@@ -62,7 +62,11 @@
     [avg-serieses       avg]
     [min-serieses       minSeries]
     [max-serieses       maxSeries]
-    [sum-serieses       sumSeries]])
+    [sum-serieses       sumSeries]
+    [map-values-above-to-nil
+                        removeAboveValue gen/int]
+    [map-values-below-to-nil
+                        removeBelowValue gen/int]])
 
 (doseq [[lead-f graphite-f & args] comparisons]
   (println lead-f)
