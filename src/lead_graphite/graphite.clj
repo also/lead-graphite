@@ -30,7 +30,6 @@
 import sys
 import imp
 import os
-sys.path.append('env/lib/python2.7/site-packages')
 sys.path.append('graphite-web/webapp')
 
 def make_module(name, **kwargs):
@@ -62,6 +61,7 @@ make_module('graphite.account.models', Profile=None)
 # from graphite.render.evaluator import evaluateTarget
 make_module('graphite.render.evaluator', evaluateTarget=lambda *x: None)
 make_module('pyparsing')
+make_module('pytz')
 os.environ['READTHEDOCS'] = 'true'
 from graphite.util import timestamp
 del os.environ['READTHEDOCS']
