@@ -8,6 +8,7 @@
             [clojure.pprint :as pp]))
 
 (def num-tests 100)
+
 (def epsilon 10e-6)
 
 (defrecord TestSeriesSource [serieses]
@@ -21,11 +22,36 @@
    :step step
    :end (+ start (* step (count values)))})
 
+(def gen-values (gen/vector gen/int))
+(def gen-name gen/string-alpha-numeric)
 (def gen-series
-  (gen/fmap create-series (gen/tuple gen/string-alpha-numeric gen/pos-int gen/s-pos-int (gen/vector gen/int))))
+  (gen/fmap create-series (gen/tuple gen-name gen/pos-int gen/s-pos-int gen-values)))
 
-(def gen-serieses-source
+; prior to https://github.com/graphite-project/graphite-web/commit/ae9c076ff46c1e716e23585d6e7adc390ad00c58
+; graphite had a very inefficient lcm function. testing many non-overlapping series will take forever.
+(def gen-independent-serieses-source
   (gen/fmap ->TestSeriesSource (gen/vector gen-series 2 10)))
+
+(def gen-range (gen/fmap (fn [[a b]] [a (+ a b)]) (gen/tuple gen/s-pos-int gen/s-pos-int)))
+(def gen-name-and-values (gen/tuple gen-name gen-values))
+(def gen-range-and-valueses (gen/tuple gen-range (gen/vector gen-name-and-values 2 10)))
+
+(defn create-overlapping-serieses [[[start end] valueses]]
+  (map (fn [[name values]]
+         {:name name
+          :values values
+          :start start
+          :end end
+          :step (if (seq values)
+                  (int (Math/ceil (/ (- end start) (count values))))
+                  1)})
+       valueses))
+
+(def gen-overlapping-serieses-source
+  (gen/fmap (comp ->TestSeriesSource create-overlapping-serieses) gen-range-and-valueses))
+
+; TODO gen/frequency with gen-independent-serieses-source
+(def gen-serieses-source gen-overlapping-serieses-source)
 
 (defn close-enough? [serieses-a serieses-b]
   (every? (fn [[series-a series-b]]
