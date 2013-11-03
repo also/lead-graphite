@@ -63,16 +63,18 @@
     [map-values-below-to-nil
                         removeBelowValue gen/int]])
 
-(doseq [[lead-f graphite-f & args] comparisons]
-  (println lead-f)
-  (let [{result :result :as m} (sc/quick-check num-tests
-    (compare-serieses
-      (ns-resolve 'lead.builtin-functions lead-f)
-      (ns-resolve 'lead-graphite.graphite graphite-f)
-      (map (comp deref resolve) args)))]
-    (prn m)
-    (if (instance? Throwable result)
-      (.printStackTrace result)))
+(doseq [[lead-s graphite-s & args] comparisons]
+  (println lead-s)
+  (if-let [lead-f (ns-resolve 'lead.builtin-functions lead-s)]
+    (if-let [graphite-f (ns-resolve 'lead-graphite.graphite graphite-s)]
+      (let [resolved-args (map (comp deref resolve) args)
+            prop (compare-serieses lead-f graphite-f resolved-args)
+            {result :result :as m} (sc/quick-check num-tests prop)]
+        (prn m)
+        (if (instance? Throwable result)
+          (.printStackTrace result)))
+      (println "Graphite function" graphite-s "does not exist"))
+    (throw (RuntimeException. (str "lead function " lead-s " does not exist"))))
   (println))
 
 (defn find-untested-lead-fs []
