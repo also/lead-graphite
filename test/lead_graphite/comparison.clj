@@ -65,10 +65,19 @@
     [sum-serieses       sumSeries]])
 
 (doseq [[lead-f graphite-f & args] comparisons]
-  (println graphite-f)
+  (println lead-f)
   (prn (sc/quick-check num-tests
     (compare-serieses
       (ns-resolve 'lead.builtin-functions lead-f)
       (ns-resolve 'lead-graphite.graphite graphite-f)
       (map (comp deref resolve) args))))
   (println))
+
+(defn find-untested-lead-fs []
+  (let [all-lead-fs (fns/find-fns 'lead.builtin-functions)
+        tested-lead-fs (map #(ns-resolve 'lead.builtin-functions (first %)) comparisons)]
+    (remove (set tested-lead-fs) all-lead-fs)))
+
+(println "Untested:")
+(doseq [f (find-untested-lead-fs)]
+  (println (.sym f)))
