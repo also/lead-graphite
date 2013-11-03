@@ -30,7 +30,7 @@
 (defn close-enough? [serieses-a serieses-b]
   (every? (fn [[series-a series-b]]
             (every? (fn [[a b]] (or (= a b) ; handles nil
-                                    (< (Math/abs (- (double a) (double b))) epsilon)))
+                                    (and a b (< (Math/abs (- (double a) (double b))) epsilon))))
                     (map vector (:values series-a) (:values series-b))))
           (map vector serieses-a serieses-b)))
 
