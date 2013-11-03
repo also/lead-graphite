@@ -73,7 +73,9 @@ from graphite.render import functions
 (def TimeSeries (.__getattr__ functions-module "TimeSeries"))
 
 (defn series->TimeSeries [t]
-  (apply call TimeSeries ((juxt :name #(PyInteger. (:start %)) #(PyInteger. (:end %)) #(PyInteger. (:step %)) :values :consolidation-fn) t)))
+  (let [result (apply call TimeSeries ((juxt :name #(PyInteger. (:start %)) #(PyInteger. (:end %)) #(PyInteger. (:step %)) :values #(if-let [cf (:consolidation-fn %)] cf "average")) t))]
+    (.__setattr__ result "pathExpression" (PyUnicode. (:name t)))
+    result))
 
 (def py-functions (.__getattr__ functions-module "SeriesFunctions"))
 
