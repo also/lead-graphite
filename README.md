@@ -1,8 +1,7 @@
 ```clojure
-(let [request {"startTime" (graphite/datetime 1), "endTime" (graphite/datetime 1000)}
-      sin (graphite/sinFunction request "sin")
-      random (graphite/randomWalkFunction request "random")]
-  (prn request)
+(let [opts {:start 1 :end 1000}
+      sin (graphite/sinFunction opts "sin")
+      random (graphite/randomWalkFunction opts "random")]
   (prn sin)
   (prn random))
 ```
