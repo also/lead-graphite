@@ -69,9 +69,12 @@ make_module('graphite.account.models', Profile=None)
 # from graphite.render.evaluator import evaluateTarget
 make_module('graphite.render.evaluator', evaluateTarget=lambda *x: None)
 make_module('pyparsing')
-make_module('pytz')
+make_module('pytz', timezone=lambda *x: None)
 os.environ['READTHEDOCS'] = 'true'
-import graphite.util
+try:
+  import graphite.util
+except:
+  pass
 del os.environ['READTHEDOCS']
 from graphite.render import functions
 ")
