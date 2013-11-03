@@ -51,15 +51,24 @@
       (.printStackTrace e)
       false)))
 
-(defn compare-serieses [lead-f graphite-f & args]
+(defn compare-serieses [lead-f graphite-f args]
   (prop/for-all [s gen-serieses-source
                  args (apply gen/tuple args)]
     (compare-source s lead-f graphite-f args)))
 
-(defspec test-scale num-tests (compare-serieses #'lead/scale-serieses #'graphite/scale gen/int))
-(defspec test-offset num-tests (compare-serieses #'lead/increment-serieses #'graphite/offset gen/int))
-(defspec test-avg num-tests (compare-serieses #'lead/avg-serieses #'graphite/avg))
-(defspec test-min num-tests (compare-serieses #'lead/min-serieses #'graphite/minSeries))
-(defspec test-max num-tests (compare-serieses #'lead/max-serieses #'graphite/maxSeries))
-(defspec test-sum num-tests (compare-serieses #'lead/sum-serieses #'graphite/sumSeries))
-(defspec test-removeBelowValue num-tests (compare-serieses #'lead/map-values-below-to-nil #'graphite/removeBelowValue gen/int))
+(def comparisons
+  '[[scale-serieses     scale gen/int]
+    [increment-serieses offset gen/int]
+    [avg-serieses       avg]
+    [min-serieses       minSeries]
+    [max-serieses       maxSeries]
+    [sum-serieses       sumSeries]])
+
+(doseq [[lead-f graphite-f & args] comparisons]
+  (println graphite-f)
+  (prn (sc/quick-check num-tests
+    (compare-serieses
+      (ns-resolve (find-ns 'lead.builtin-functions) lead-f)
+      (ns-resolve (find-ns 'lead-graphite.graphite) graphite-f)
+      (map (comp deref resolve) args))))
+  (println))
