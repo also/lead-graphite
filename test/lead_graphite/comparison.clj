@@ -4,7 +4,8 @@
             [simple-check.properties :as prop]
             [lead.functions :as fns]
             [lead.builtin-functions :as lead]
-            [lead-graphite.graphite :as graphite]))
+            [lead-graphite.graphite :as graphite]
+            [clojure.pprint :as pp]))
 
 (def num-tests 100)
 (def epsilon 10e-6)
@@ -70,7 +71,7 @@
       (let [resolved-args (map (comp deref resolve) args)
             prop (compare-serieses lead-f graphite-f resolved-args)
             {result :result :as m} (sc/quick-check num-tests prop)]
-        (prn m)
+        (pp/pprint m)
         (if (instance? Throwable result)
           (.printStackTrace result)))
       (println "Graphite function" graphite-s "does not exist"))
