@@ -43,12 +43,8 @@
     [lead-result graphite-result]))
 
 (defn compare-source [s lead-f graphite-f args]
-  (try
-    (let [[lead-result graphite-result] (run s lead-f graphite-f args)]
-      (close-enough? lead-result graphite-result))
-    (catch Exception e
-      (.printStackTrace e)
-      false)))
+  (let [[lead-result graphite-result] (run s lead-f graphite-f args)]
+    (close-enough? lead-result graphite-result)))
 
 (defn compare-serieses [lead-f graphite-f args]
   (prop/for-all [s gen-serieses-source
@@ -69,11 +65,14 @@
 
 (doseq [[lead-f graphite-f & args] comparisons]
   (println lead-f)
-  (prn (sc/quick-check num-tests
+  (let [{result :result :as m} (sc/quick-check num-tests
     (compare-serieses
       (ns-resolve 'lead.builtin-functions lead-f)
       (ns-resolve 'lead-graphite.graphite graphite-f)
-      (map (comp deref resolve) args))))
+      (map (comp deref resolve) args)))]
+    (prn m)
+    (if (instance? Throwable result)
+      (.printStackTrace result)))
   (println))
 
 (defn find-untested-lead-fs []
