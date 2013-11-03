@@ -68,7 +68,7 @@
   (println graphite-f)
   (prn (sc/quick-check num-tests
     (compare-serieses
-      (ns-resolve (find-ns 'lead.builtin-functions) lead-f)
-      (ns-resolve (find-ns 'lead-graphite.graphite) graphite-f)
+      (ns-resolve 'lead.builtin-functions lead-f)
+      (ns-resolve 'lead-graphite.graphite graphite-f)
       (map (comp deref resolve) args))))
   (println))
