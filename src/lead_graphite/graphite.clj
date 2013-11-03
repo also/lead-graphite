@@ -39,11 +39,19 @@ def make_module(name, **kwargs):
 
 import graphite
 make_module('django')
-make_module('django.conf', settings={'TIME_ZONE': 'UTC'})
+
+class Settings(object):
+  pass
+settings = Settings()
+settings.TIME_ZONE = 'UTC'
+settings.CARBONLINK_HOSTS = []
+settings.CARBONLINK_TIMEOUT = -1
+make_module('django.conf', settings=settings)
+
 make_module('graphite.logger', log=lambda *x: None)
 make_module('graphite.events', models=None)
 make_module('graphite.render.glyph', format_units=None)
-make_module('graphite.storage', STORE=None)
+make_module('graphite.storage', STORE=None, LOCAL_STORE=None)
 make_module('graphite.readers', FetchInProgress=None)
 
 #from django.core.exceptions import ObjectDoesNotExist
@@ -63,7 +71,7 @@ make_module('graphite.render.evaluator', evaluateTarget=lambda *x: None)
 make_module('pyparsing')
 make_module('pytz')
 os.environ['READTHEDOCS'] = 'true'
-from graphite.util import timestamp
+import graphite.util
 del os.environ['READTHEDOCS']
 from graphite.render import functions
 ")

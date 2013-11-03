@@ -90,6 +90,8 @@
 (doseq [f (find-untested-lead-fs)]
   (println (.sym f)))
 
-(println "Unimplemented")
+(println)
+
+(println "Unimplemented:")
 (doseq [f (find-unimplemented-graphite-fs)]
   (println (.sym f)))
