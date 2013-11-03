@@ -2,7 +2,6 @@
   (:require [simple-check.core :as sc]
             [simple-check.generators :as gen]
             [simple-check.properties :as prop]
-            [simple-check.clojure-test :as ct :refer (defspec)]
             [lead.functions :as fns]
             [lead.builtin-functions :as lead]
             [lead-graphite.graphite :as graphite]))
@@ -82,6 +81,15 @@
         tested-lead-fs (map #(ns-resolve 'lead.builtin-functions (first %)) comparisons)]
     (remove (set tested-lead-fs) all-lead-fs)))
 
+(defn find-unimplemented-graphite-fs []
+  (let [all-graphite-fs (fns/find-fns 'lead-graphite.graphite)
+        implemented-graphite-fs (map #(ns-resolve 'lead-graphite.graphite (second %)) comparisons)]
+    (remove (set implemented-graphite-fs) all-graphite-fs)))
+
 (println "Untested:")
 (doseq [f (find-untested-lead-fs)]
+  (println (.sym f)))
+
+(println "Unimplemented")
+(doseq [f (find-unimplemented-graphite-fs)]
   (println (.sym f)))
