@@ -30,7 +30,6 @@
 import sys
 import imp
 import os
-sys.path.append('graphite-web/webapp')
 
 def make_module(name, **kwargs):
   mod = imp.new_module(name)
