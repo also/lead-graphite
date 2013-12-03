@@ -4,4 +4,5 @@
                  [org.clojure/clojure "1.5.1"]
                  [org.python/jython-standalone "2.7-b1"]
                  [reiddraper/simple-check "0.5.2" :scope "test"]]
-  :profiles {:dev {:resource-paths ["graphite-web/webapp"]}})
+  :aliases {"graphite" ["with-profile" "graphite" "test"]}
+  :profiles {:graphite {:jvm-opts ["-Dpython.path=graphite-web/webapp"]}})
