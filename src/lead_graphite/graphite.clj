@@ -33,7 +33,13 @@
 (def TimeSeries (.__getattr__ functions-module "TimeSeries"))
 
 (defn series->TimeSeries [t]
-  (let [result (apply call TimeSeries ((juxt :name #(PyInteger. (:start %)) #(PyInteger. (:end %)) #(PyInteger. (:step %)) :values #(if-let [cf (:consolidation-fn %)] cf "average")) t))]
+  (let [result (apply call TimeSeries ((juxt :name
+                                             #(PyInteger. (:start %))
+                                             #(PyInteger. (:end %))
+                                             #(PyInteger. (:step %))
+                                             :values
+                                             #(if-let [cf (:consolidation-fn %)] cf "average"))
+                                       t))]
     (.__setattr__ result "pathExpression" (PyUnicode. (:name t)))
     result))
 
