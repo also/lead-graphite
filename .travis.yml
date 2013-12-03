@@ -1,2 +1,5 @@
 language: clojure
 lein: lein2
+before_script:
+- lein2 graphite
+- script/cp-jython-classes
