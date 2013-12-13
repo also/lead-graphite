@@ -40,12 +40,10 @@
 (def evaluateTarget
   (proxy [PyObject] []
     (__call__ [thread-state context name]
-      (prn context name)
       (let [target (Py/tojava name String)
             opts {:start (/ (.getTime (get context "startTime")) 1000)
                   :end (/ (.getTime (get context "endTime")) 1000)}
             serieses (fns/run (parser/parse target) opts)]
-        (prn serieses)
         (PyList. (map series->TimeSeries serieses))))))
 
 (.__setattr__ functions-module "evaluateTarget" evaluateTarget)
