@@ -23,6 +23,7 @@
 
 (defn TimeSeries->series [t]
   {:name   (tojava t "name" String)
+   :path-expression (tojava t "pathExpression" String)
    :values t
    :start  (tojava t "start" Number)
    :end    (tojava t "end" Number)
@@ -40,7 +41,7 @@
                                              :values
                                              #(if-let [cf (:consolidation-fn %)] cf "average"))
                                        t))]
-    (.__setattr__ result "pathExpression" (PyUnicode. (:name t)))
+    (.__setattr__ result "pathExpression" (PyUnicode. (or (:path-expression t) (:name t))))
     result))
 
 (def evaluateTarget
