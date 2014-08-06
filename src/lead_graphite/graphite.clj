@@ -1,6 +1,7 @@
 (ns lead-graphite.graphite
   (:require [lead.functions :as fns]
             [lead.parser :as parser])
+  (:refer-clojure :exclude [time identity alias])
   (:import org.python.util.PythonInterpreter
            [org.python.core PyFunction Py PyList PyInteger PyDictionary PyUnicode PyObject imp]))
 
