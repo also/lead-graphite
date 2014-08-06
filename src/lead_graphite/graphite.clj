@@ -19,8 +19,10 @@
 (def functions-module (.get interp "functions"))
 
 (defn tojava [o attr cls]
-  (if-let [v (.__getattr__ o attr)]
-    (Py/tojava v cls)))
+  (if-let [v (try
+                (.__getattr__ o attr)
+                (catch Exception e nil))]
+     (Py/tojava v cls)))
 
 (defn TimeSeries->series [t]
   {:name   (tojava t "name" String)
