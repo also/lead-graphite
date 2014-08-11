@@ -3,10 +3,19 @@
             [lead.parser :as parser])
   (:refer-clojure :exclude [time identity alias])
   (:import org.python.util.PythonInterpreter
-           [org.python.core PyFunction Py PyList PyInteger PyDictionary PyUnicode PyObject imp]))
+           [org.python.core PyFunction Py PyList PyInteger PyDictionary PyUnicode PyObject imp PyException PyFile]
+           (java.io PrintWriter ByteArrayOutputStream)))
 
 (defn call [function & args]
-  (.__call__ function (Py/javas2pys (to-array args))))
+  (try
+    (.__call__ function (Py/javas2pys (to-array args)))
+    (catch PyException e
+      (throw (ex-info "Error calling Python function"
+                      {:python-function   (str function)
+                       :python-stacktrace (let [out (ByteArrayOutputStream.)]
+                                            (Py/displayException (.type e) (.value e) (.traceback e) (PyFile. out))
+                                            (str out))}
+                      e)))))
 
 (def interp (PythonInterpreter.))
 (def datetime-module (imp/importName "datetime" true))
@@ -68,10 +77,13 @@
        args))
 
 (defn opts->requestContext [opts]
-  (PyDictionary. {(PyUnicode. "startTime") (datetime (:start opts)) (PyUnicode. "endTime") (datetime (:end opts))}))
+  (PyDictionary. {(PyUnicode. "startTime") (datetime (:start opts))
+                  (PyUnicode. "endTime") (datetime (:end opts))}))
 
 (doseq [[function-name function] py-functions]
   (intern *ns* (with-meta (symbol function-name) {:args "???" :complicated true})
           (fn [opts & args]
-            (map TimeSeries->series
-                 (apply call function (opts->requestContext opts) (load-args opts args))))))
+            (let [loaded-args (load-args opts args)
+                  request-context (opts->requestContext opts)
+                  graphite-time-serieses (apply call function request-context loaded-args)]
+              (map TimeSeries->series graphite-time-serieses)))))
