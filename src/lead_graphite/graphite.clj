@@ -71,8 +71,8 @@
 
 (defn load-args [opts args]
   (map (fn [arg]
-         (if (fns/series-source? arg)
-           (PyList. (map series->TimeSeries (fns/load-serieses arg opts)))
+         (if (fns/lead-callable? arg)
+           (PyList. (map series->TimeSeries (fns/call arg opts)))
            arg))
        args))
 
