@@ -11,10 +11,6 @@
 
 (def epsilon 10e-6)
 
-(defrecord TestSeriesSource [serieses]
-  fns/SeriesSource
-  (load-serieses [this opts] serieses))
-
 (defn create-series [[name start step values]]
   {:name name
    :values values
@@ -30,7 +26,7 @@
 ; prior to https://github.com/graphite-project/graphite-web/commit/ae9c076ff46c1e716e23585d6e7adc390ad00c58
 ; graphite had a very inefficient lcm function. testing many non-overlapping series will take forever.
 (def gen-independent-serieses-source
-  (gen/fmap ->TestSeriesSource (gen/vector gen-series 2 10)))
+  (gen/fmap fns/->ValueCallable (gen/vector gen-series 2 10)))
 
 (def gen-range (gen/fmap (fn [[a b]] [a (+ a b)]) (gen/tuple gen/s-pos-int gen/s-pos-int)))
 (def gen-name-and-values (gen/tuple gen-name gen-values))
@@ -48,7 +44,7 @@
        valueses))
 
 (def gen-overlapping-serieses-source
-  (gen/fmap (comp ->TestSeriesSource create-overlapping-serieses) gen-range-and-valueses))
+  (gen/fmap (comp fns/->ValueCallable create-overlapping-serieses) gen-range-and-valueses))
 
 ; TODO gen/frequency with gen-independent-serieses-source
 (def gen-serieses-source gen-overlapping-serieses-source)
@@ -65,8 +61,8 @@
         opts {:start (-> s :serieses first :start) :end (-> s :serieses first :end)}
         lead-source (fns/function->source "test" lead-f args)
         graphite-source (fns/function->source "test" graphite-f args)
-        lead-result (fns/load-serieses lead-source opts)
-        graphite-result (fns/load-serieses graphite-source opts)]
+        lead-result (fns/call lead-source opts)
+        graphite-result (fns/call graphite-source opts)]
     [lead-result graphite-result]))
 
 (defn compare-source [s lead-f graphite-f args]
