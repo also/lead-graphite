@@ -1,9 +1,11 @@
 (ns lead-graphite.graphite
   (:require [lead.functions :as fns]
-            [lead.parser :as parser])
+            [lead.parser :as parser]
+            [lead.series :as series]
+            [schema.core :as sm])
   (:refer-clojure :exclude [time identity alias])
   (:import org.python.util.PythonInterpreter
-           [org.python.core PyFunction Py PyList PyInteger PyDictionary PyUnicode PyObject imp PyException PyFile]
+           [org.python.core PyFunction Py PyList PyInteger PyDictionary PyUnicode PyObject imp PyException PyFile PyString PyNone]
            (java.io PrintWriter ByteArrayOutputStream)))
 
 (defn call [function & args]
@@ -21,7 +23,8 @@
 (def datetime-module (imp/importName "datetime" true))
 (def datetime-class (.__getattr__ datetime-module "datetime"))
 (defn datetime [timestamp] (-> datetime-class (.__getattr__ "fromtimestamp") (call timestamp)))
-(def getargspec (partial call (-> (imp/importName "inspect" true) (.__getattr__ "getargspec"))))
+(def getargspec (partial call (-> (imp/importName "inspect" true)
+                                  (.__getattr__ "getargspec"))))
 
 (.exec interp (slurp (clojure.java.io/resource "patch_graphite.py")))
 
@@ -69,21 +72,64 @@
 
 (def py-functions (.__getattr__ functions-module "SeriesFunctions"))
 
-(defn load-args [opts args]
+(defn transform-args [args]
   (map (fn [arg]
-         (if (fns/lead-callable? arg)
-           (PyList. (map series->TimeSeries (fns/call arg opts)))
-           arg))
+         (cond
+           (nil? arg) arg                                   ; hmm
+           (number? arg) arg
+           (string? arg) (PyString. arg)
+           :else (map series->TimeSeries arg)))
        args))
 
 (defn opts->requestContext [opts]
   (PyDictionary. {(PyUnicode. "startTime") (datetime (:start opts))
                   (PyUnicode. "endTime") (datetime (:end opts))}))
 
+(def schemas-by-name
+  {"seriesList" series/RegularSeriesList
+   "seriesLists" series/RegularSeriesList
+   "name" sm/Str
+   "search" sm/Str
+   "replace" sm/Str
+   "consolidationFunc" sm/Str
+   "intervalString" sm/Str
+   "func" sm/Str
+   "n" sm/Int})
+
+(defn schema-by-name [name]
+  (schemas-by-name name sm/Any))
+
+(defn build-schema [function-name function]
+  (let [argspec (getargspec function)
+        args (.__getattr__ argspec "args")
+        varargs (.__getattr__ argspec "varargs")
+        varargs (if (= varargs Py/None) nil (str varargs))
+        defaults (.__getattr__ argspec "defaults")
+        defaults (if (= defaults Py/None) [] defaults)
+        keywords (.__getattr__ argspec "keywords")
+        [required optional] (split-at (- (count args) (count defaults)) args)
+        required (rest required)]
+    (if (or (not= "requestContext" (first args))
+            (not= keywords Py/None))
+      (throw (ex-info "Weird Graphite Python function"
+                      {:function function
+                       :argspec argspec})))
+    (let [schema (vec (flatten
+                        [(sm/one fns/Opts "opts")
+                         (map #(sm/one (schema-by-name %) %) required)
+                         (map #(sm/optional (schema-by-name %) %) optional)]))]
+      (if varargs
+        (conj schema (schema-by-name varargs))
+        schema))))
+
 (doseq [[function-name function] py-functions]
-  (intern *ns* (with-meta (symbol function-name) {:args "???" :complicated true})
-          (fn [opts & args]
-            (let [loaded-args (load-args opts args)
-                  request-context (opts->requestContext opts)
-                  graphite-time-serieses (apply call function request-context loaded-args)]
-              (map TimeSeries->series graphite-time-serieses)))))
+  (let [schema (build-schema function-name function)]
+    (intern *ns* (with-meta (symbol function-name)
+                            {:leadfn true
+                             :uses-opts true
+                             :schema (sm/->FnSchema sm/Any [schema])})
+           (fn [opts & args]
+             (let [loaded-args (transform-args args)
+                   request-context (opts->requestContext opts)
+                   graphite-time-serieses (apply call function request-context loaded-args)]
+               (map TimeSeries->series graphite-time-serieses))))))
