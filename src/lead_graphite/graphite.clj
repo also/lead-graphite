@@ -13,7 +13,9 @@
     (.__call__ function (Py/javas2pys (to-array args)))
     (catch PyException e
       (throw (ex-info "Error calling Python function"
-                      {:python-function   (str function)
+                      {:lead-exception-type :internal
+                       :message (.. e value __repr__ toString)
+                       :python-function   (str function)
                        :python-stacktrace (let [out (ByteArrayOutputStream.)]
                                             (Py/displayException (.type e) (.value e) (.traceback e) (PyFile. out))
                                             (str out))}
