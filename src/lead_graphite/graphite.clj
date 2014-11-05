@@ -134,4 +134,4 @@
              (let [loaded-args (transform-args args)
                    request-context (opts->requestContext opts)
                    graphite-time-serieses (apply call function request-context loaded-args)]
-               (map TimeSeries->series graphite-time-serieses))))))
+               (mapv TimeSeries->series graphite-time-serieses))))))
