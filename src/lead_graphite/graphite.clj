@@ -80,7 +80,7 @@
            (nil? arg) arg                                   ; hmm
            (number? arg) arg
            (string? arg) (PyString. arg)
-           :else (map series->TimeSeries arg)))
+           :else (PyList. (map series->TimeSeries arg))))
        args))
 
 (defn opts->requestContext [opts]
