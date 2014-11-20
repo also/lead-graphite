@@ -6,7 +6,8 @@
   (:refer-clojure :exclude [time identity alias])
   (:import org.python.util.PythonInterpreter
            [org.python.core PyFunction Py PyList PyInteger PyDictionary PyUnicode PyObject imp PyException PyFile PyString PyNone]
-           (java.io PrintWriter ByteArrayOutputStream)))
+           (java.io PrintWriter ByteArrayOutputStream)
+           (java.util Map)))
 
 (defn call [function & args]
   (try
@@ -46,7 +47,8 @@
    :end    (tojava t "end" Number)
    :step (tojava t "step" Number)
    :consolidation-fn (tojava t "consolidationFunc" String)
-   :values-per-point (tojava t "valuesPerPoint" Number)})
+   :values-per-point (tojava t "valuesPerPoint" Number)
+   :options (tojava t "options" Map)})
 
 (def TimeSeries (.__getattr__ functions-module "TimeSeries"))
 
@@ -59,6 +61,7 @@
                                              #(if-let [cf (:consolidation-fn %)] cf "average"))
                                        t))]
     (.__setattr__ result "pathExpression" (PyUnicode. (or (:path-expression t) (:name t))))
+    (if-let [options (:options t)] (.. result (__getattr__ "options") (putAll options)))
     result))
 
 (def evaluateTarget
