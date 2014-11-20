@@ -56,7 +56,7 @@
   (let [result (apply call TimeSeries ((juxt :name
                                              #(PyInteger. (:start %))
                                              #(PyInteger. (:end %))
-                                             #(PyInteger. (:step %))
+                                             #(if-let [step (:step %)] (PyInteger. step))
                                              :values
                                              #(if-let [cf (:consolidation-fn %)] cf "average"))
                                        t))]
