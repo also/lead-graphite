@@ -40,15 +40,15 @@
      (Py/tojava v cls)))
 
 (defn TimeSeries->series [t]
-  {:name   (tojava t "name" String)
-   :path-expression (tojava t "pathExpression" String)
-   :values t
-   :start  (tojava t "start" Number)
-   :end    (tojava t "end" Number)
-   :step (tojava t "step" Number)
+  {:name             (tojava t "name" String)
+   :path-expression  (tojava t "pathExpression" String)
+   :values           t
+   :start            (tojava t "start" Number)
+   :end              (tojava t "end" Number)
+   :step             (tojava t "step" Number)
    :consolidation-fn (tojava t "consolidationFunc" String)
    :values-per-point (tojava t "valuesPerPoint" Number)
-   :options (tojava t "options" Map)})
+   :options          (into {} (tojava t "options" Map))})
 
 (def TimeSeries (.__getattr__ functions-module "TimeSeries"))
 
